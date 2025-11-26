@@ -1,24 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        body{background-color:yellow;}
-        h1{color: blueviolet;}
-    </style>
-    
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stone Paper Scissors</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #ffdd00, #ff6ec7);
+    }
+
+    .game-container {
+      background: #ffffffdd;
+      border-radius: 20px;
+      padding: 24px 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      color: #333;
+    }
+
+    .subtitle {
+      margin-bottom: 20px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .choices {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .choice-btn {
+      flex: 1 1 30%;
+      padding: 10px 0;
+      border: none;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+      outline: none;
+    }
+
+    .choice-stone {
+      background: #3498db;
+      color: white;
+    }
+
+    .choice-paper {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .choice-scissors {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    }
+
+    .choice-btn:active {
+      transform: translateY(0px) scale(0.97);
+      box-shadow: none;
+    }
+
+    .status-box {
+      margin: 18px 0;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f4f4f8;
+      font-size: 15px;
+    }
+
+    .status-line {
+      margin: 6px 0;
+    }
+
+    .result-text {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .result-win {
+      color: #27ae60;
+    }
+
+    .result-lose {
+      color: #c0392b;
+    }
+
+    .result-draw {
+      color: #8e44ad;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-between;
+      margin: 14px 0 4px;
+      font-size: 15px;
+    }
+
+    .reset-btn {
+      margin-top: 10px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: #555;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .reset-btn:hover {
+      background: #000;
+      transform: translateY(-1px);
+    }
+
+    .reset-btn:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    @media (max-width: 500px) {
+      .game-container {
+        margin: 16px;
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <h1 style="color:blue;">A Blue Heading</h1>
-    <h2 style="color:black">content</h2>
-    <br>
-    <ul>
-        <li>1</li>
-        <li>2</li>
-        <li>3</li>
-        <li>4</li>
-    </ul>
+  <div class="game-container">
+    <h1>Stone · Paper · Scissors</h1>
+    <p class="subtitle">Choose your move and try to beat the computer!</p>
+
+    <div class="choices">
+      <button class="choice-btn choice-stone" data-choice="stone">🪨 Stone</button>
+      <button class="choice-btn choice-paper" data-choice="paper">📄 Paper</button>
+      <button class="choice-btn choice-scissors" data-choice="scissors">✂️ Scissors</button>
+    </div>
+
+    <div class="status-box">
+      <p class="status-line" id="your-choice">You: —</p>
+      <p class="status-line" id="computer-choice">Computer: —</p>
+      <p class="result-text" id="result-text">Make your move!</p>
+    </div>
+
+    <div class="scoreboard">
+      <span id="player-score">Your Score: 0</span>
+      <span id="computer-score">Computer Score: 0</span>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">Reset Score</button>
+  </div>
+
+  <script>
+    // All possible choices
+    const choices = ["stone", "paper", "scissors"];
+
+    // DOM elements
+    const buttons = document.querySelectorAll(".choice-btn");
+    const yourChoiceEl = document.getElementById("your-choice");
+    const computerChoiceEl = document.getElementById("computer-choice");
+    const resultTextEl = document.getElementById("result-text");
+    const playerScoreEl = document.getElementById("player-score");
+    const computerScoreEl = document.getElementById("computer-score");
+    const resetBtn = document.getElementById("reset-btn");
+
+    // Scores
+    let playerScore = 0;
+    let computerScore = 0;
+
+    // Function: get random computer choice
+    function getComputerChoice() {
+      const index = Math.floor(Math.random() * choices.length);
+      return choices[index];
+    }
+
+    // Function: decide winner
+    function getResult(player, computer) {
+      if (player === computer) {
+        return "draw";
+      }
+
+      // Winning conditions for player
+      if (
+        (player === "stone" && computer === "scissors") ||
+        (player === "paper" && computer === "stone") ||
+        (player === "scissors" && computer === "paper")
+      ) {
+        return "win";
+      }
+
+      return "lose";
+    }
+
+    // Function: pretty format for text
+    function formatChoice(choice) {
+      return choice.charAt(0).toUpperCase() + choice.slice(1);
+    }
+
+    // When player clicks a choice
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const playerChoice = btn.dataset.choice;
+        const computerChoice = getComputerChoice();
+        const result = getResult(playerChoice, computerChoice);
+
+        // Update text
+        yourChoiceEl.textContent = "You: " + formatChoice(playerChoice);
+        computerChoiceEl.textContent = "Computer: " + formatChoice(computerChoice);
+
+        // Remove old result classes
+        resultTextEl.classList.remove("result-win", "result-lose", "result-draw");
+
+        // Update result and score
+        if (result === "win") {
+          resultTextEl.textContent = "You Win! 🎉";
+          resultTextEl.classList.add("result-win");
+          playerScore++;
+        } else if (result === "lose") {
+          resultTextEl.textContent = "You Lose! 😢";
+          resultTextEl.classList.add("result-lose");
+          computerScore++;
+        } else {
+          resultTextEl.textContent = "It's a Draw! 🤝";
+          resultTextEl.classList.add("result-draw");
+        }
+
+        // Show scores
+        playerScoreEl.textContent = "Your Score: " + playerScore;
+        computerScoreEl.textContent = "Computer Score: " + computerScore;
+      });
+    });
+
+    // Reset button
+    resetBtn.addEventListener("click", () => {
+      playerScore = 0;
+      computerScore = 0;
+      playerScoreEl.textContent = "Your Score: 0";
+      computerScoreEl.textContent = "Computer Score: 0";
+      yourChoiceEl.textContent = "You: —";
+      computerChoiceEl.textContent = "Computer: —";
+      resultTextEl.textContent = "Make your move!";
+      resultTextEl.classList.remove("result-win", "result-lose", "result-draw");
+    });
+  </script>
 </body>
 </html>
